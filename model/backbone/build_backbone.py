@@ -81,7 +81,7 @@ class Backbone(nn.Module):
         else:
             return tuple(outs)
         
-     def get_bn_before_relu(self):
+    def get_bn_before_relu(self):
         if self.model_instance=='resnet50':
             bn1 = self.layer1[-1].bn3
             bn2 = self.layer2[-1].bn3
@@ -96,13 +96,11 @@ class Backbone(nn.Module):
             print('ResNet unknown block error !!!')
 
         return [bn1, bn2, bn3, bn4]
-
     def get_channel_num(self):
         if self.model_instance=='resnet50':
             return [256, 512, 1024, 2048]
         elif self.model_instance=='resnet18':
             return [64, 128, 256, 512]
-
 
     def extract_feature(self, x, preReLU=False):
 

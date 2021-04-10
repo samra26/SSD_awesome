@@ -15,6 +15,7 @@ class Backbone(nn.Module):
         self.model = self.add_extras(model_name,lay, channal)
         self.model_length = len(self.model)
         self.feature_map = feature_map
+        self.model_instance=model_name
 
 
 
@@ -79,6 +80,45 @@ class Backbone(nn.Module):
             return outs[0]
         else:
             return tuple(outs)
+        
+     def get_bn_before_relu(self):
+        if self.model_instance=='resnet50':
+            bn1 = self.layer1[-1].bn3
+            bn2 = self.layer2[-1].bn3
+            bn3 = self.layer3[-1].bn3
+            bn4 = self.layer4[-1].bn3
+        elif self.model_instance=='resnet18':
+            bn1 = self.layer1[-1].bn2
+            bn2 = self.layer2[-1].bn2
+            bn3 = self.layer3[-1].bn2
+            bn4 = self.layer4[-1].bn2
+        else:
+            print('ResNet unknown block error !!!')
+
+        return [bn1, bn2, bn3, bn4]
+
+    def get_channel_num(self):
+        if self.model_instance=='resnet50':
+            return [256, 512, 1024, 2048]
+        elif self.model_instance=='resnet18':
+            return [64, 128, 256, 512]
+
+
+    def extract_feature(self, x, preReLU=False):
+
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        feat1 = self.layer1(x)
+        low_level_feat = F.relu(feat1)
+        feat2 = self.layer2(feat1)
+        feat3 = self.layer3(feat2)
+        feat4 = self.layer4(feat3)
+        out = F.relu(feat4)
+
+        return [feat1, feat2, feat3, feat4], out
 
 
 

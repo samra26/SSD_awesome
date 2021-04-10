@@ -44,12 +44,12 @@ class Distiller(nn.Module):
     def __init__(self, t_net, s_net):
         super(Distiller, self).__init__()
 
-        t_channels = t_net.module.get_channel_num()
+        t_channels = t_net.get_channel_num()
         s_channels = s_net.get_channel_num()
 
         self.Connectors = nn.ModuleList([build_feature_connector(t, s) for t, s in zip(t_channels, s_channels)])
 
-        teacher_bns = t_net.module.get_bn_before_relu()
+        teacher_bns = t_net.get_bn_before_relu()
         margins = [get_margin_from_BN(bn) for bn in teacher_bns]
         for i, margin in enumerate(margins):
             self.register_buffer('margin%d' % (i+1), margin.unsqueeze(1).unsqueeze(2).unsqueeze(0).detach())
@@ -59,7 +59,7 @@ class Distiller(nn.Module):
 
     def forward(self, x):
 
-        t_feats, t_out = self.t_net.module.extract_feature(x, preReLU=True)
+        t_feats, t_out = self.t_net.extract_feature(x, preReLU=True)
         s_feats, s_out = self.s_net.extract_feature(x, preReLU=True)
         feat_num = len(t_feats)
 

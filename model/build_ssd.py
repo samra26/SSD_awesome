@@ -95,18 +95,18 @@ class SSD(nn.Module):
         return output
     
     def get_bn_before_relu(self):
-        BNs = self.base.get_bn_before_relu()
+        BNs = self.backbone.get_bn_before_relu()
         
         return BNs
 
     def get_channel_num(self):
-        channels = self.base.get_channel_num()
+        channels = self.backbone.get_channel_num()
         
 
         return channels
 
     def extract_feature(self, input, preReLU=False):
-        feats, x, low_level_feat = self.base.extract_feature(input)
+        feats, x = self.backbone.extract_feature(input)
        
 
         return feats, x

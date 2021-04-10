@@ -44,6 +44,7 @@ class SSD(nn.Module):
         self.backbone = Backbone
         self.neck = Neck
         self.head = Head
+      
         self.num_classes = cfg['num_classes']
         self.softmax = nn.Softmax(dim=-1)
         self.detect = Detect(self.num_classes , 0, 200, 0.01, 0.45,variance = cfg['variance'])
@@ -92,6 +93,23 @@ class SSD(nn.Module):
                 self.priors
             )
         return output
+    
+    def get_bn_before_relu(self):
+        BNs = self.base.get_bn_before_relu()
+        
+        return BNs
+
+    def get_channel_num(self):
+        channels = self.base.get_channel_num()
+        
+
+        return channels
+
+    def extract_feature(self, input, preReLU=False):
+        feats, x, low_level_feat = self.base.extract_feature(input)
+       
+
+        return feats, x
 
     def load_weights(self, base_file):
         other, ext = os.path.splitext(base_file)

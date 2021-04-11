@@ -116,7 +116,7 @@ class Backbone(nn.Module):
         low_level_feat = F.relu(feat1)
         feat2 = self.get_layers['layer2'](feat1)   #self.layer2(feat1)
         feat3 = self.get_layers['layer3'](feat2)        #self.layer3(feat2)
-        feat4 = self.get_layers['layer2'](feat3)             #self.layer4(feat3)
+        feat4 = self.get_layers['layer4'](feat3)             #self.layer4(feat3)
         out = F.relu(feat4)
 
         return [feat1, feat2, feat3, feat4], out

@@ -2,7 +2,7 @@ import pretrainedmodels
 import torch.nn as nn
 from torchsummary import summary
 from ..utils import ConvModule
-
+import torch.nn.functional as F
 
     
 
@@ -11,12 +11,12 @@ class Backbone(nn.Module):
     def __init__(self, model_name, feature_map):
         super(Backbone,self).__init__()
         self.normalize = {'type':'BN'}
-        lay,channal = self.get_pretrainedmodel(model_name)
+        lay,channal,getLayers = self.get_pretrainedmodel(model_name)
         self.model = self.add_extras(model_name,lay, channal)
         self.model_length = len(self.model)
         self.feature_map = feature_map
         self.model_instance=model_name
-
+        self.get_layers=getLayers
 
 
     def get_pretrainedmodel(self,model_name,pretrained = 'imagenet'):#'imagenet'
@@ -34,7 +34,10 @@ class Backbone(nn.Module):
                 out_channels = 2048
             else:
                 out_channels = 512
-        return lay,out_channels
+        getLayers={}
+        for n,c in model.named_children():
+            getLayers[n]=c
+        return lay,out_channels,getLayers
 
     def add_extras(self,model_name,lay,in_channel):
         if model_name == 'resnet50':
@@ -83,15 +86,15 @@ class Backbone(nn.Module):
         
     def get_bn_before_relu(self):
         if self.model_instance=='resnet50':
-            bn1 = self.layer1[-1].bn3
-            bn2 = self.layer2[-1].bn3
-            bn3 = self.layer3[-1].bn3
-            bn4 = self.layer4[-1].bn3
+            bn1 = self.get_layers['layer1'][-1].bn3
+            bn2 = self.get_layers['layer2'][-1].bn3
+            bn3 = self.get_layers['layer3'][-1].bn3
+            bn4 = self.get_layers['layer4'][-1].bn3
         elif self.model_instance=='resnet18':
-            bn1 = self.layer1[-1].bn2
-            bn2 = self.layer2[-1].bn2
-            bn3 = self.layer3[-1].bn2
-            bn4 = self.layer4[-1].bn2
+            bn1 = self.get_layers['layer1'][-1].bn2
+            bn2 = self.get_layers['layer2'][-1].bn2
+            bn3 = self.get_layers['layer3'][-1].bn2
+            bn4 = self.get_layers['layer4'][-1].bn2
         else:
             print('ResNet unknown block error !!!')
 
@@ -104,16 +107,16 @@ class Backbone(nn.Module):
 
     def extract_feature(self, x, preReLU=False):
 
-        x = self.conv1(x)
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x)
+        x = self.get_layers['conv1'](x)   #self.conv1(x)
+        x = self.get_layers['bn1'](x)   #self.bn1(x)
+        x = self.get_layers['relu'](x)  #self.relu(x)
+        x = self.get_layers['maxpool'](x)  #self.maxpool(x)
 
-        feat1 = self.layer1(x)
+        feat1 = self.get_layers['layer1'](x)  #self.layer1(x)
         low_level_feat = F.relu(feat1)
-        feat2 = self.layer2(feat1)
-        feat3 = self.layer3(feat2)
-        feat4 = self.layer4(feat3)
+        feat2 = self.get_layers['layer2'](feat1)   #self.layer2(feat1)
+        feat3 = self.get_layers['layer3'](feat2)        #self.layer3(feat2)
+        feat4 = self.get_layers['layer2'](feat3)             #self.layer4(feat3)
         out = F.relu(feat4)
 
         return [feat1, feat2, feat3, feat4], out

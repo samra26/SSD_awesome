@@ -44,7 +44,7 @@ parser.add_argument('--weight_decay', default=5e-4, type=float,
                     help='Weight decay for SGD')
 parser.add_argument('--gamma', default=0.1, type=float,
                     help='Gamma update for SGD')
-parser.add_argument('--visdom', default='VOC',type=str,
+parser.add_argument('--visdom', default=False,type=str,
                     help='Use visdom')
 parser.add_argument('--work_dir', default='work_dir/',
                     help='Directory for saving checkpoint models')
@@ -188,14 +188,13 @@ def train():
             # load train data
             images, targets = batch_iterator
             #print(images,targets)
-            '''if args.cuda:
-                images = Variable(images.cuda())
-                targets = [Variable(ann.cuda() for ann in targets)]
+            if args.cuda:
+                images = images.cuda()
+                targets = [ann.cuda() for ann in targets]
             else:
-                images = Variable(images)
-                targets = [Variable(ann for ann in targets)]'''
-            images = images.cuda()
-            targets = [ann.cuda() for ann in targets]
+                images = images
+                targets = [ann for ann in targets]
+
             t0 = time.time()
             #out = net(images,'train')
             out, loss_distill = d_net(images)

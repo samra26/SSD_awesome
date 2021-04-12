@@ -131,13 +131,14 @@ def train():
 
     distill_ratio = 1e-5
     batch_size = args.batch_size
-    distill_params = [{'params': s_net.parameters(), 'lr': args.lr},
-                      {'params': d_net.Connectors.parameters(), 'lr': args.lr * 10}]
+    distill_params = [{'params': s_net.parameters()},
+                      {'params': d_net.Connectors.parameters()}]
 
-    init_params = [{'params': d_net.Connectors.parameters(), 'lr': args.lr * 10}]
+    
     
     if args.cuda:
         s_net = s_net.cuda()
+        t_net = t_net.cuda()
         d_net = d_net.cuda()
         
     #net.train()
@@ -148,7 +149,7 @@ def train():
     #optimizer
     #optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
     optimizer = optim.SGD(distill_params, lr=args.lr, momentum=args.momentum,weight_decay=args.weight_decay)
-    init_optimizer = optim.SGD(init_params, lr=args.lr, momentum=args.momentum,weight_decay=args.weight_decay)
+    
     
 
     #Loss:SmoothL1\Giou
@@ -200,7 +201,7 @@ def train():
             out, loss_distill = d_net(images)
             optimizer.zero_grad()
             loss_l, loss_c = criterion(out, targets)
-            loss = loss_l + loss_c + loss_distill
+            loss = loss_l + loss_c + loss_distill.sum() / args.batch_size * 1e-5
             loss.backward()
             optimizer.step()
             t1 = time.time()
